@@ -2,6 +2,9 @@
 
 A modern, feature-rich event calendar application built with Next.js, React, and TypeScript. Datify offers a beautiful interface with an animated night sky background and powerful event management capabilities.
 
+<img width="1470" alt="Screenshot 2024-12-23 at 2 40 16 PM" src="https://github.com/user-attachments/assets/c5f39ad7-9b4e-4e22-9d51-87a04acbbb6c" />
+
+
 ## 🌟 Features
 
 - **Interactive Calendar Interface**
