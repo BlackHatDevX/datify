@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bg_gradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1B2735"/>
+      <stop offset="100%" stop-color="#090A0F"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8"/>
+    </filter>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Main rounded rectangle background -->
+  <rect width="512" height="512" rx="128" fill="url(#bg_gradient)"/>
+
+  <!-- Calendar base with subtle shadow -->
+  <g filter="url(#shadow)">
+    <rect x="96" y="128" width="320" height="320" rx="24" fill="#ffffff" fill-opacity="0.95"/>
+  </g>
+
+  <!-- Calendar header -->
+  <rect x="96" y="128" width="320" height="80" rx="24" fill="#60A5FA"/>
+
+  <!-- Calendar grid lines - vertical -->
+  <rect x="202" y="208" width="2" height="240" fill="#E5E7EB" fill-opacity="0.5"/>
+  <rect x="310" y="208" width="2" height="240" fill="#E5E7EB" fill-opacity="0.5"/>
+
+  <!-- Calendar grid lines - horizontal -->
+  <rect x="96" y="288" width="320" height="2" fill="#E5E7EB" fill-opacity="0.5"/>
+  <rect x="96" y="368" width="320" height="2" fill="#E5E7EB" fill-opacity="0.5"/>
+
+  <!-- Selected date with glow -->
+  <g filter="url(#glow)">
+    <circle cx="256" cy="328" r="32" fill="#60A5FA" fill-opacity="0.3"/>
+  </g>
+  <circle cx="256" cy="328" r="24" fill="#60A5FA"/>
+
+  <!-- Top hanging circles -->
+  <circle cx="160" cy="128" r="8" fill="#1B2735"/>
+  <circle cx="352" cy="128" r="8" fill="#1B2735"/>
+
+  <!-- Month text suggestion (stylized) -->
+  <rect x="136" y="158" width="240" height="20" rx="4" fill="white" fill-opacity="0.9"/>
+
+  <!-- Decorative stars -->
+  <circle cx="120" cy="80" r="2" fill="white" fill-opacity="0.8"/>
+  <circle cx="392" cy="60" r="2" fill="white" fill-opacity="0.6"/>
+  <circle cx="432" cy="100" r="2" fill="white" fill-opacity="0.7"/>
+  <circle cx="80" cy="120" r="2" fill="white" fill-opacity="0.5"/>
+</svg> 
