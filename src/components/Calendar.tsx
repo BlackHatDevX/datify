@@ -15,7 +15,7 @@ interface CalendarProps {
 
 export function Calendar({ selectedDate, onSelectDate, onMonthChange }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const { events, updateEventDate } = useEvents()
+  const { events } = useEvents()
 
   useEffect(() => {
     onMonthChange(currentDate)

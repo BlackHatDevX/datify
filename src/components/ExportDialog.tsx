@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { FileJson, FileSpreadsheet, FileText } from "lucide-react"
 import { useEvents } from "@/contexts/EventContext"
-import { FileJson, FileSpreadsheet, Download } from "lucide-react"
+import * as XLSX from 'xlsx'
+import { stringify } from 'csv-stringify/sync'
 
 interface ExportDialogProps {
   open: boolean
@@ -12,138 +13,99 @@ interface ExportDialogProps {
   currentMonth: Date
 }
 
+interface ExportEvent {
+  id: string
+  title: string
+  date: string
+  startTime: string
+  endTime: string
+  description: string
+  category: string
+}
+
 export function ExportDialog({ open, onOpenChange, currentMonth }: ExportDialogProps) {
   const { events } = useEvents()
-  const [isExporting, setIsExporting] = useState(false)
 
-  const getMonthEvents = () => {
-    return events.filter(event => {
-      const eventDate = new Date(event.date)
-      return eventDate.getMonth() === currentMonth.getMonth() &&
-             eventDate.getFullYear() === currentMonth.getFullYear()
-    })
-  }
-
-  const formatEventForExport = (event: any) => {
+  const currentMonthEvents = events.filter(event => {
     const eventDate = new Date(event.date)
-    return {
-      title: event.title,
-      date: eventDate.toLocaleDateString(),
-      startTime: event.startTime,
-      endTime: event.endTime,
-      category: event.category,
-      description: event.description || ''
-    }
+    return eventDate.getMonth() === currentMonth.getMonth() &&
+           eventDate.getFullYear() === currentMonth.getFullYear()
+  })
+
+  const exportData: ExportEvent[] = currentMonthEvents.map(event => ({
+    id: event.id,
+    title: event.title,
+    date: new Date(event.date).toLocaleDateString(),
+    startTime: event.startTime,
+    endTime: event.endTime,
+    description: event.description,
+    category: event.category
+  }))
+
+  const handleExportJSON = () => {
+    const jsonString = JSON.stringify(exportData, null, 2)
+    downloadFile(jsonString, 'events.json', 'application/json')
   }
 
-  const downloadFile = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const handleExportCSV = () => {
+    const csv = stringify(exportData, {
+      header: true,
+      columns: ['id', 'title', 'date', 'startTime', 'endTime', 'description', 'category']
+    })
+    downloadFile(csv, 'events.csv', 'text/csv')
+  }
+
+  const handleExportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(exportData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Events")
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    downloadFile(
+      new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+      'events.xlsx',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+  }
+
+  const downloadFile = (content: string | Blob, fileName: string, mimeType: string) => {
+    const blob = typeof content === 'string' ? new Blob([content], { type: mimeType }) : content
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = filename
+    link.download = fileName
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   }
 
-  const exportToJSON = () => {
-    setIsExporting(true)
-    try {
-      const monthEvents = getMonthEvents().map(formatEventForExport)
-      const content = JSON.stringify(monthEvents, null, 2)
-      const filename = `events-${currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}.json`
-      downloadFile(content, filename)
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  const exportToCSV = () => {
-    setIsExporting(true)
-    try {
-      const monthEvents = getMonthEvents().map(formatEventForExport)
-      const headers = ['Title', 'Date', 'Start Time', 'End Time', 'Category', 'Description']
-      const rows = monthEvents.map(event => [
-        event.title,
-        event.date,
-        event.startTime,
-        event.endTime,
-        event.category,
-        `"${event.description.replace(/"/g, '""')}"`
-      ])
-      const content = [
-        headers.join(','),
-        ...rows.map(row => row.join(','))
-      ].join('\n')
-      const filename = `events-${currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}.csv`
-      downloadFile(content, filename)
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  const exportToExcel = () => {
-    setIsExporting(true)
-    try {
-      const monthEvents = getMonthEvents().map(formatEventForExport)
-      // Create CSV content with tab separator for Excel
-      const headers = ['Title', 'Date', 'Start Time', 'End Time', 'Category', 'Description']
-      const rows = monthEvents.map(event => [
-        event.title,
-        event.date,
-        event.startTime,
-        event.endTime,
-        event.category,
-        event.description
-      ])
-      const content = [
-        headers.join('\t'),
-        ...rows.map(row => row.join('\t'))
-      ].join('\n')
-      const filename = `events-${currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}.xls`
-      downloadFile(content, filename)
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-900 border-none shadow-xl">
-        <DialogHeader className="space-y-3 pb-4 border-b border-gray-100 dark:border-gray-800">
-          <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
-            Export Events
-          </DialogTitle>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Export events for {currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}
-          </p>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Export Events</DialogTitle>
         </DialogHeader>
-
-        <div className="grid grid-cols-1 gap-4 py-4">
+        <div className="grid gap-4 py-4">
           <Button
-            onClick={exportToJSON}
-            disabled={isExporting}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
+            onClick={handleExportJSON}
+            variant="outline"
+            className="flex items-center gap-2 justify-start"
           >
             <FileJson className="w-4 h-4" />
             Export as JSON
           </Button>
-
           <Button
-            onClick={exportToCSV}
-            disabled={isExporting}
-            className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
+            onClick={handleExportCSV}
+            variant="outline"
+            className="flex items-center gap-2 justify-start"
           >
-            <Download className="w-4 h-4" />
+            <FileText className="w-4 h-4" />
             Export as CSV
           </Button>
-
           <Button
-            onClick={exportToExcel}
-            disabled={isExporting}
-            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700"
+            onClick={handleExportExcel}
+            variant="outline"
+            className="flex items-center gap-2 justify-start"
           >
             <FileSpreadsheet className="w-4 h-4" />
             Export as Excel
